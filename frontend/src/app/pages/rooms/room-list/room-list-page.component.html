@@ -1,0 +1,84 @@
+<app-page-header
+  eyebrow="Rooms"
+  title="Gestion des chambres"
+  subtitle="Visualisez les chambres disponibles, filtrez par type ou disponibilite et mettez a jour l inventaire."
+  actionLabel="Ajouter une chambre"
+  actionLink="/rooms/new"
+/>
+
+<app-section-card
+  title="Filtres"
+  description="Un filtrage simple et lisible, ideal pour montrer l ergonomie du front pendant la demonstration."
+  badge="Filter"
+>
+  <form class="grid gap-4 md:grid-cols-[1fr_14rem_auto_auto]" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+    <div>
+      <label class="app-label" for="room-type">Type</label>
+      <input id="room-type" type="text" class="app-input" placeholder="STANDARD, DELUXE, SUITE..." formControlName="type" />
+    </div>
+
+    <div>
+      <label class="app-label" for="room-availability">Disponibilite</label>
+      <select id="room-availability" class="app-select" formControlName="availability">
+        <option value="all">Toutes</option>
+        <option value="available">Disponibles</option>
+        <option value="unavailable">Indisponibles</option>
+      </select>
+    </div>
+
+    <div class="flex items-end">
+      <button type="submit" class="app-button-primary w-full">Appliquer</button>
+    </div>
+
+    <div class="flex items-end">
+      <button type="button" class="app-button-secondary w-full" (click)="resetFilters()">Reset</button>
+    </div>
+  </form>
+</app-section-card>
+
+<div class="mt-6">
+  <app-section-card
+    title="Inventaire des chambres"
+    [description]="rooms.length + ' chambre(s) visibles dans la vue courante.'"
+    badge="Inventory"
+  >
+    @if (rooms.length > 0) {
+      <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+        @for (room of rooms; track room.id) {
+          <article class="app-card overflow-hidden p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Room {{ room.number }}</p>
+                <h3 class="mt-2 font-display text-2xl font-semibold text-slate-950">{{ room.type }}</h3>
+                <p class="mt-2 text-sm text-slate-500">Capacite {{ room.capacity }} personne(s)</p>
+              </div>
+              <app-status-badge
+                [label]="room.available ? 'Available' : 'Unavailable'"
+                [variant]="room.available ? 'success' : 'danger'"
+              />
+            </div>
+
+            <div class="mt-6 rounded-3xl bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Prix par nuit</p>
+              <p class="mt-2 font-display text-3xl font-semibold text-slate-950">
+                {{ room.pricePerNight | currency: 'EUR' }}
+              </p>
+            </div>
+
+            <div class="mt-5 flex gap-2">
+              <a class="app-button-secondary flex-1" [routerLink]="['/rooms/edit', room.id]">Modifier</a>
+              <button type="button" class="app-button-danger flex-1" (click)="deleteRoom(room)">Supprimer</button>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <app-empty-state
+        title="Aucune chambre trouvee"
+        [description]="errorMessage || 'Ajoutez une chambre ou modifiez les filtres pour afficher un resultat.'"
+        actionLabel="Ajouter une chambre"
+        actionLink="/rooms/new"
+      />
+    }
+  </app-section-card>
+</div>

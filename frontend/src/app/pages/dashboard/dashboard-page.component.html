@@ -1,0 +1,180 @@
+<app-page-header
+  eyebrow="Dashboard"
+  title="Pilotage global de la plateforme"
+  subtitle="Une vue synthétique pour suivre l'activité des clients, des chambres et des reservations pendant votre demonstration."
+  actionLabel="Nouvelle reservation"
+  actionLink="/reservations/new"
+/>
+
+@if (overview; as data) {
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <app-stat-card
+      title="Clients"
+      [value]="data.stats.totalClients"
+      description="Nombre total de clients enregistres."
+      accent="teal"
+    />
+    <app-stat-card
+      title="Chambres"
+      [value]="data.stats.totalRooms"
+      description="Inventaire total des chambres."
+      accent="slate"
+    />
+    <app-stat-card
+      title="Reservations"
+      [value]="data.stats.totalReservations"
+      description="Demandes creees sur la plateforme."
+      accent="amber"
+    />
+    <app-stat-card
+      title="Disponibles"
+      [value]="data.stats.availableRooms"
+      description="Chambres actuellement disponibles."
+      accent="rose"
+    />
+  </div>
+
+  <div class="mt-8 grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+    <app-section-card
+      title="Reservations recentes"
+      description="Dernieres operations enregistrées dans le systeme."
+      badge="Live"
+    >
+      @if (data.recentReservations.length > 0) {
+        <div class="overflow-hidden rounded-3xl border border-slate-200">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Client</th>
+                <th>Room</th>
+                <th>Dates</th>
+                <th>Prix</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white/60">
+              @for (reservation of data.recentReservations; track reservation.id) {
+                <tr class="transition hover:bg-slate-50/70">
+                  <td class="font-semibold text-slate-900">#{{ reservation.id }}</td>
+                  <td>{{ reservation.clientId }}</td>
+                  <td>{{ reservation.roomId }}</td>
+                  <td>
+                    <p>{{ reservation.startDate | date: 'dd MMM yyyy' }}</p>
+                    <p class="text-xs text-slate-500">{{ reservation.endDate | date: 'dd MMM yyyy' }}</p>
+                  </td>
+                  <td class="font-semibold text-slate-900">{{ reservation.totalPrice ?? 0 | currency: 'EUR' }}</td>
+                  <td>
+                    <app-status-badge
+                      [label]="reservation.status ?? 'UNKNOWN'"
+                      [variant]="
+                        reservation.status === 'CONFIRMED'
+                          ? 'success'
+                          : reservation.status === 'CREATED'
+                            ? 'warning'
+                            : 'danger'
+                      "
+                    />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-empty-state
+          title="Aucune reservation recente"
+          description="Creer une premiere reservation pour faire vivre le dashboard."
+          actionLabel="Creer une reservation"
+          actionLink="/reservations/new"
+        />
+      }
+    </app-section-card>
+
+    <div class="space-y-6">
+      <app-section-card
+        title="Synthese rapide"
+        description="Quelques indicateurs utiles pour la soutenance."
+        badge="Insight"
+      >
+        <div class="space-y-4">
+          <div class="app-card-muted flex items-center justify-between px-4 py-4">
+            <div>
+              <p class="text-sm font-semibold text-slate-700">Taux d occupation</p>
+              <p class="text-sm text-slate-500">Basé sur la disponibilite des chambres.</p>
+            </div>
+            <span class="font-display text-3xl font-semibold text-slate-950">{{ occupancyRate }}%</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-2xl bg-amber-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Created</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-950">{{ data.stats.createdReservations }}</p>
+            </div>
+            <div class="rounded-2xl bg-teal-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Confirmed</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-950">{{ data.stats.confirmedReservations }}</p>
+            </div>
+            <div class="rounded-2xl bg-red-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-red-700">Cancelled</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-950">{{ data.stats.cancelledReservations }}</p>
+            </div>
+          </div>
+        </div>
+      </app-section-card>
+
+      <app-section-card
+        title="Chambres a surveiller"
+        description="Selection mise en avant pour la demo."
+        badge="Rooms"
+      >
+        <div class="space-y-3">
+          @for (room of data.featuredRooms; track room.id) {
+            <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4">
+              <div>
+                <p class="font-semibold text-slate-900">Room {{ room.number }} • {{ room.type }}</p>
+                <p class="text-sm text-slate-500">
+                  Capacite {{ room.capacity }} • {{ room.pricePerNight | currency: 'EUR' }} / nuit
+                </p>
+              </div>
+              <app-status-badge
+                [label]="room.available ? 'Available' : 'Unavailable'"
+                [variant]="room.available ? 'success' : 'danger'"
+              />
+            </div>
+          }
+        </div>
+      </app-section-card>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <app-section-card
+      title="Derniers clients enregistres"
+      description="Nouveaux profils utiles pour les tests de parcours."
+      badge="Clients"
+    >
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        @for (client of data.newestClients; track client.id) {
+          <a
+            class="rounded-3xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:shadow-glass"
+            [routerLink]="['/clients/edit', client.id]"
+          >
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Client #{{ client.id }}</p>
+            <h3 class="mt-3 font-display text-xl font-semibold text-slate-950">
+              {{ client.firstName }} {{ client.lastName }}
+            </h3>
+            <p class="mt-2 text-sm text-slate-500">{{ client.email }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ client.phone }}</p>
+          </a>
+        }
+      </div>
+    </app-section-card>
+  </div>
+} @else if (errorMessage) {
+  <app-empty-state
+    title="Dashboard indisponible"
+    [description]="errorMessage"
+    actionLabel="Revenir aux reservations"
+    actionLink="/reservations"
+  />
+}

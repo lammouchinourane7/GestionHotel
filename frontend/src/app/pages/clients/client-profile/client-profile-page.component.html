@@ -1,0 +1,148 @@
+<app-page-header
+  eyebrow="Clients"
+  title="Profil client enrichi"
+  subtitle="Vue client uniquement: fidelisation, historique, preferences et audit."
+/>
+
+@if (profile && history) {
+  <div class="grid gap-6">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <app-stat-card title="Points" [value]="profile.loyalty.points" description="Score de fidelisation." accent="teal" />
+      <app-stat-card title="Reservations" [value]="history.reservationCount" description="Historique total." accent="amber" />
+      <app-stat-card title="Depense" [value]="(history.totalSpent | currency: 'EUR') ?? 'EUR 0'" description="Hors reservations annulees." accent="rose" />
+      <app-stat-card title="Moyenne" [value]="(history.averageSpent | currency: 'EUR') ?? 'EUR 0'" description="Par reservation." accent="slate" />
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.9fr]">
+      <div class="space-y-6">
+        <app-section-card title="Identite client" description="Donnees principales du client." badge="Client">
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Client</p>
+              <p class="mt-2 text-lg font-semibold text-slate-950">
+                {{ profile.client.firstName }} {{ profile.client.lastName }}
+              </p>
+              <p class="mt-1 text-sm text-slate-500">Client ID {{ profile.client.id }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Fidelisation</p>
+              <div class="mt-3">
+                <app-status-badge [label]="profile.loyalty.status" [variant]="loyaltyVariant" />
+              </div>
+              <p class="mt-2 text-sm text-slate-500">{{ profile.loyalty.confirmedReservations }} reservations confirmees</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Contact</p>
+              <p class="mt-2 text-sm text-slate-700">{{ profile.client.email }}</p>
+              <p class="mt-1 text-sm text-slate-500">{{ profile.client.phone }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Adresse</p>
+              <p class="mt-2 text-sm text-slate-700">{{ profile.client.address || 'Non renseignee' }}</p>
+              <p class="mt-1 text-sm text-slate-500">{{ profile.client.nationalId || 'National ID non renseigne' }}</p>
+            </div>
+          </div>
+        </app-section-card>
+
+        <app-section-card title="Historique client" description="Synthese et reservations connues." badge="History">
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-2xl bg-teal-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Premiere reservation</p>
+              <p class="mt-2 text-sm font-semibold text-slate-900">{{ history.firstReservationDate | date: 'dd MMM yyyy' }}</p>
+            </div>
+            <div class="rounded-2xl bg-amber-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Derniere reservation</p>
+              <p class="mt-2 text-sm font-semibold text-slate-900">{{ history.lastReservationDate | date: 'dd MMM yyyy' }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Prochaine reservation</p>
+              <p class="mt-2 text-sm font-semibold text-slate-900">
+                {{ history.nextReservationDate ? (history.nextReservationDate | date: 'dd MMM yyyy') : 'Aucune' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+            <div class="overflow-x-auto">
+              <table class="app-table">
+                <thead>
+                  <tr>
+                    <th>Reservation</th>
+                    <th>Dates</th>
+                    <th>Statut</th>
+                    <th>Prix</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 bg-white/70">
+                  @for (reservation of history.reservations; track reservation.id) {
+                    <tr>
+                      <td class="font-semibold text-slate-900">#{{ reservation.id }}</td>
+                      <td>{{ reservation.startDate | date: 'dd/MM/yyyy' }} - {{ reservation.endDate | date: 'dd/MM/yyyy' }}</td>
+                      <td>{{ reservation.status }}</td>
+                      <td>{{ reservation.totalPrice | currency: 'EUR' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </app-section-card>
+      </div>
+
+      <div class="space-y-6">
+        <app-section-card title="Preferences de sejour" description="Donnees stockees dans ms-client." badge="Preferences">
+          <div class="space-y-4 text-sm text-slate-600">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="font-semibold text-slate-900">Type prefere</p>
+              <p class="mt-2">{{ profile.stayPreferences.preferredRoomType || 'Non defini' }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="font-semibold text-slate-900">Lit / Etage</p>
+              <p class="mt-2">{{ profile.stayPreferences.preferredBedType || 'Libre' }} • Etage {{ profile.stayPreferences.preferredFloor ?? 'N/A' }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="font-semibold text-slate-900">Options</p>
+              <p class="mt-2">
+                {{ profile.stayPreferences.quietRoom ? 'Calme' : 'Standard' }} •
+                {{ profile.stayPreferences.nonSmoking ? 'Non fumeur' : 'Libre' }} •
+                {{ profile.stayPreferences.highFloor ? 'Etage eleve' : 'Sans contrainte' }}
+              </p>
+              <p class="mt-1 text-slate-500">{{ profile.stayPreferences.needsBabyBed ? 'Lit bebe requis' : 'Pas de lit bebe' }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="font-semibold text-slate-900">Demandes speciales</p>
+              <p class="mt-2">{{ profile.stayPreferences.specialRequests || 'Aucune demande speciale' }}</p>
+            </div>
+          </div>
+        </app-section-card>
+
+        <app-section-card title="Historique des changements" description="Trace des actions sur le client." badge="Audit">
+          <div class="space-y-3">
+            @for (change of changes; track change.id) {
+              <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="text-sm font-semibold text-slate-900">{{ change.action }}</p>
+                  <p class="text-xs text-slate-400">{{ change.changedAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+                </div>
+                <p class="mt-2 text-sm text-slate-600">{{ change.details }}</p>
+                <p class="mt-1 text-xs text-slate-400">Par {{ change.changedBy }}</p>
+              </div>
+            }
+          </div>
+        </app-section-card>
+
+        <div class="flex flex-wrap gap-3">
+          <a [routerLink]="['/clients/edit', profile.client.id]" class="app-button-primary">Modifier</a>
+          <a routerLink="/clients" class="app-button-secondary">Retour a la liste</a>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else {
+  <app-empty-state
+    title="Profil client indisponible"
+    [description]="errorMessage || 'Le profil client ne peut pas etre affiche pour le moment.'"
+    actionLabel="Retour aux clients"
+    actionLink="/clients"
+  />
+}
