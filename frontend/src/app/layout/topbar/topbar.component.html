@@ -17,10 +17,39 @@
     </div>
 
     <div class="hidden items-center gap-3 md:flex">
+      @if (authService.isEnabled()) {
+        <div class="rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Session</p>
+          <p class="mt-1 text-sm font-medium text-slate-700">
+            {{ authService.userName() || 'Non connecte' }}
+          </p>
+        </div>
+      }
+
       <div class="rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm">
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Date</p>
         <p class="mt-1 text-sm font-medium text-slate-700">{{ now | date: 'fullDate' }}</p>
       </div>
+
+      @if (authService.isEnabled()) {
+        @if (authService.isAuthenticated()) {
+          <button
+            type="button"
+            class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            (click)="logout()"
+          >
+            Deconnexion
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="rounded-2xl border border-teal-600 bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+            (click)="login()"
+          >
+            Connexion
+          </button>
+        }
+      }
     </div>
   </div>
 </header>

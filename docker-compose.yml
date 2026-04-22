@@ -72,6 +72,10 @@ services:
       EUREKA_HOST: eureka-server
       EUREKA_PORT: 8761
       FRONTEND_ORIGIN: http://localhost:4200
+      FRONTEND_ORIGIN_ALT: http://127.0.0.1:4200
+      AUTH_ENABLED: ${AUTH_ENABLED:-false}
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://localhost:8085/realms/hotel-realm}
+      KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI:-http://keycloak:8080/realms/hotel-realm/protocol/openid-connect/certs}
     ports:
       - "8080:8080"
 
@@ -148,6 +152,8 @@ services:
       RABBITMQ_PASSWORD: guest
       EUREKA_HOST: eureka-server
       EUREKA_PORT: 8761
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://localhost:8085/realms/hotel-realm}
+      KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI:-http://keycloak:8080/realms/hotel-realm/protocol/openid-connect/certs}
     ports:
       - "8083:8083"
 
@@ -161,6 +167,19 @@ services:
       - api-gateway
     ports:
       - "4200:80"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    container_name: hotel-keycloak
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm", "--http-port=8080"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8085:8080"
 
 volumes:
   mysql_data:

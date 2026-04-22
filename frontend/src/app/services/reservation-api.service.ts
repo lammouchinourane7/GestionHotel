@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Reservation, ReservationDetails } from '../models/reservation.model';
+import {
+  Reservation,
+  ReservationClientOption,
+  ReservationDetails,
+  ReservationRoomOption
+} from '../models/reservation.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +18,10 @@ export class ReservationApiService {
 
   getAllReservations(): Observable<Reservation[]> {
     return this.http.get<Reservation[]>(this.endpoint);
+  }
+
+  getMyReservations(): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(`${this.endpoint}/me`);
   }
 
   getReservationById(id: number): Observable<Reservation> {
@@ -45,5 +54,13 @@ export class ReservationApiService {
 
   getReservationsByRoomId(roomId: number): Observable<Reservation[]> {
     return this.http.get<Reservation[]>(`${this.endpoint}/room/${roomId}`);
+  }
+
+  getReservationClientOptions(): Observable<ReservationClientOption[]> {
+    return this.http.get<ReservationClientOption[]>(`${this.endpoint}/options/clients`);
+  }
+
+  getReservationRoomOptions(): Observable<ReservationRoomOption[]> {
+    return this.http.get<ReservationRoomOption[]>(`${this.endpoint}/options/rooms`);
   }
 }

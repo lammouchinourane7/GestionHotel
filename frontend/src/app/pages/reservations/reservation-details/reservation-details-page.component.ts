@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ErrorMessageService } from '../../../core/services/error-message.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ReservationDetails } from '../../../models/reservation.model';
 import { ReservationApiService } from '../../../services/reservation-api.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -31,11 +32,16 @@ export class ReservationDetailsPageComponent {
   private readonly errorMessageService = inject(ErrorMessageService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   readonly reservationId = Number(this.route.snapshot.paramMap.get('id')) || null;
 
   reservation: ReservationDetails | null = null;
   errorMessage = '';
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
 
   ngOnInit(): void {
     this.loadReservation();
@@ -64,6 +70,10 @@ export class ReservationDetailsPageComponent {
   }
 
   confirmReservation(): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
     if (!this.reservationId) {
       return;
     }
@@ -86,6 +96,10 @@ export class ReservationDetailsPageComponent {
   }
 
   cancelReservation(): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
     if (!this.reservationId) {
       return;
     }

@@ -29,6 +29,7 @@ import com.hotel.reservationservice.service.ReservationService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -48,6 +49,22 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationResponse createReservation(ReservationRequest request) {
+        return createReservationInternal(request);
+    }
+
+    @Override
+    public ReservationResponse createReservationForUser(String email, ReservationRequest request) {
+        Long clientId = resolveClientIdByEmail(email);
+        ReservationRequest userRequest = ReservationRequest.builder()
+                .clientId(clientId)
+                .roomId(request.getRoomId())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .build();
+        return createReservationInternal(userRequest);
+    }
+
+    private ReservationResponse createReservationInternal(ReservationRequest request) {
         validateReservationDates(request);
         ensureClientExists(request.getClientId());
         ensureRoomExists(request.getRoomId());
@@ -85,14 +102,39 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ReservationResponse> getReservationsForUser(String email) {
+        Long clientId = resolveClientIdByEmail(email);
+        return getReservationsByClientId(clientId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ReservationResponse getReservationById(Long id) {
         return reservationMapper.toResponse(findReservationById(id));
     }
 
     @Override
     @Transactional(readOnly = true)
+    public ReservationResponse getReservationByIdForUser(Long id, String email) {
+        Reservation reservation = findReservationById(id);
+        assertOwnership(reservation, email);
+        return reservationMapper.toResponse(reservation);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ReservationDetailsResponse getReservationDetails(Long id) {
         Reservation reservation = findReservationById(id);
+        ClientSummaryResponse client = fetchClientById(reservation.getClientId());
+        RoomSummaryResponse room = fetchRoomById(reservation.getRoomId());
+        return reservationMapper.toDetailsResponse(reservation, client, room);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReservationDetailsResponse getReservationDetailsForUser(Long id, String email) {
+        Reservation reservation = findReservationById(id);
+        assertOwnership(reservation, email);
         ClientSummaryResponse client = fetchClientById(reservation.getClientId());
         RoomSummaryResponse room = fetchRoomById(reservation.getRoomId());
         return reservationMapper.toDetailsResponse(reservation, client, room);
@@ -144,6 +186,26 @@ public class ReservationServiceImpl implements ReservationService {
                 .stream()
                 .map(reservationMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClientSummaryResponse> getClientOptions() {
+        try {
+            return clientServiceClient.getAllClients();
+        } catch (FeignException exception) {
+            throw new RemoteServiceException("Client service is unavailable");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RoomSummaryResponse> getRoomOptions() {
+        try {
+            return roomServiceClient.getAllRooms();
+        } catch (FeignException exception) {
+            throw new RemoteServiceException("Room service is unavailable");
+        }
     }
 
     @Override
@@ -250,6 +312,27 @@ public class ReservationServiceImpl implements ReservationService {
             return new RoomNotFoundException("Room not found with id: " + roomId);
         }
         return new RemoteServiceException("Room service is unavailable");
+    }
+
+    private Long resolveClientIdByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new AccessDeniedException("Authenticated user email is missing");
+        }
+
+        try {
+            return clientServiceClient.getClientByEmail(email).getId();
+        } catch (FeignException.NotFound exception) {
+            throw new AccessDeniedException("No client profile is linked to this account");
+        } catch (FeignException exception) {
+            throw new RemoteServiceException("Client service is unavailable");
+        }
+    }
+
+    private void assertOwnership(Reservation reservation, String email) {
+        Long authenticatedClientId = resolveClientIdByEmail(email);
+        if (!reservation.getClientId().equals(authenticatedClientId)) {
+            throw new AccessDeniedException("You are not allowed to access this reservation");
+        }
     }
 
     private void cancelReservationEntity(Reservation reservation, String reason) {

@@ -7,6 +7,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.List;
+
 @FeignClient(name = "client-service", configuration = FeignConfig.class)
 public interface ClientServiceClient {
 
@@ -15,4 +17,10 @@ public interface ClientServiceClient {
 
     @GetMapping("/api/clients/{id}")
     ClientSummaryResponse getClientById(@PathVariable("id") Long id);
+
+    @GetMapping("/api/clients/search/email/{email:.+}")
+    ClientSummaryResponse getClientByEmail(@PathVariable("email") String email);
+
+    @GetMapping("/api/clients")
+    List<ClientSummaryResponse> getAllClients();
 }

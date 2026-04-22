@@ -17,3 +17,17 @@ export interface ReservationDetails extends Reservation {
   client?: Client;
   room?: Room;
 }
+
+export interface ReservationClientOption {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email?: string;
+}
+
+export interface ReservationRoomOption {
+  id: number;
+  number: string;
+  type: string;
+  available: boolean;
+}

@@ -35,22 +35,24 @@
         </div>
 
         <div class="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            class="app-button-primary"
-            [disabled]="item.status !== 'CREATED'"
-            (click)="confirmReservation()"
-          >
-            Confirmer
-          </button>
-          <button
-            type="button"
-            class="app-button-danger"
-            [disabled]="item.status === 'CANCELLED'"
-            (click)="cancelReservation()"
-          >
-            Annuler
-          </button>
+          @if (isAdmin) {
+            <button
+              type="button"
+              class="app-button-primary"
+              [disabled]="item.status !== 'CREATED'"
+              (click)="confirmReservation()"
+            >
+              Confirmer
+            </button>
+            <button
+              type="button"
+              class="app-button-danger"
+              [disabled]="item.status === 'CANCELLED'"
+              (click)="cancelReservation()"
+            >
+              Annuler
+            </button>
+          }
           <a routerLink="/reservations" class="app-button-secondary">Retour</a>
         </div>
       </app-section-card>

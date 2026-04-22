@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: reservation-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8085/realms/hotel-realm}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8085/realms/hotel-realm/protocol/openid-connect/certs}
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/reservationdb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: ${MYSQL_USER:root}

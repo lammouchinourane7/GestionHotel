@@ -1,10 +1,12 @@
 <app-page-header
   eyebrow="Reservations"
   title="Creer une reservation"
-  subtitle="Le formulaire s appuie sur les donnees des clients et des chambres puis laisse le backend calculer le prix total."
+  [subtitle]="isAdmin
+    ? 'Le formulaire s appuie sur les donnees des clients et des chambres puis laisse le backend calculer le prix total.'
+    : 'Selectionnez une chambre et une periode. Votre compte sera automatiquement associe a la reservation.'"
 />
 
-@if (clients.length === 0 || rooms.length === 0) {
+@if ((isAdmin && clients.length === 0) || rooms.length === 0) {
   <app-empty-state
     title="Donnees insuffisantes pour reserver"
     description="Ajoutez au moins un client et une chambre avant de creer une reservation."
@@ -19,21 +21,23 @@
       badge="Form"
     >
       <form class="grid gap-5 md:grid-cols-2" [formGroup]="form" (ngSubmit)="submit()">
-        <div>
-          <label class="app-label" for="clientId">Client</label>
-          <select
-            id="clientId"
-            class="app-select"
-            [class.app-input-error]="form.controls.clientId.invalid && form.controls.clientId.touched"
-            formControlName="clientId"
-          >
-            <option [value]="0">Choisir un client</option>
-            @for (client of clients; track client.id) {
-              <option [value]="client.id">{{ client.id }} - {{ client.firstName }} {{ client.lastName }}</option>
-            }
-          </select>
-          <app-form-field-error [control]="form.controls.clientId" label="Client selection" />
-        </div>
+        @if (isAdmin) {
+          <div>
+            <label class="app-label" for="clientId">Client</label>
+            <select
+              id="clientId"
+              class="app-select"
+              [class.app-input-error]="form.controls.clientId.invalid && form.controls.clientId.touched"
+              formControlName="clientId"
+            >
+              <option [value]="0">Choisir un client</option>
+              @for (client of clients; track client.id) {
+                <option [value]="client.id">{{ client.id }} - {{ client.firstName }} {{ client.lastName }}</option>
+              }
+            </select>
+            <app-form-field-error [control]="form.controls.clientId" label="Client selection" />
+          </div>
+        }
 
         <div>
           <label class="app-label" for="roomId">Chambre</label>

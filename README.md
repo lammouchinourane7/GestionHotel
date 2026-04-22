@@ -174,6 +174,89 @@ Cela demarre :
 - RabbitMQ sur `localhost:5672`
 - RabbitMQ Management sur `http://localhost:15672`
 
+### 1.b Optionnel - Activer Keycloak pour securite
+
+Le projet peut tourner sans auth (par defaut), ou avec auth JWT via Keycloak.
+
+1. Creer un fichier `.env` a la racine avec :
+
+```bash
+AUTH_ENABLED=true
+KEYCLOAK_ISSUER_URI=http://localhost:8085/realms/hotel-realm
+```
+
+2. Demarrer (ou redemarrer) la stack :
+
+```bash
+docker compose up -d --build
+```
+
+3. Keycloak est alors disponible sur :
+
+- `http://localhost:8085` (admin/admin)
+
+Le realm `hotel-realm` est importe automatiquement avec :
+
+- utilisateur demo : `demo`
+- mot de passe demo : `demo123`
+- client public : `hotel-frontend`
+
+Comportement frontend :
+
+- Le frontend Angular est protege par Keycloak.
+- Sans session active, l utilisateur est redirige vers la page de login Keycloak.
+- Les appels API vers le gateway portent automatiquement le token bearer.
+
+Recuperer un token (exemple password grant pour test local) :
+
+```bash
+curl -X POST "http://localhost:8085/realms/hotel-realm/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=hotel-frontend" \
+  -d "grant_type=password" \
+  -d "username=demo" \
+  -d "password=demo123"
+```
+
+Puis appeler le gateway avec :
+
+```bash
+Authorization: Bearer <access_token>
+```
+
+Creer un nouvel utilisateur auth (fresh session) :
+
+```bash
+docker exec hotel-keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin
+docker exec hotel-keycloak /opt/keycloak/bin/kcadm.sh create users -r hotel-realm -s username=<new-username> -s enabled=true -s emailVerified=true
+docker exec hotel-keycloak /opt/keycloak/bin/kcadm.sh set-password -r hotel-realm --username <new-username> --new-password <new-password> --temporary=false
+docker exec hotel-keycloak /opt/keycloak/bin/kcadm.sh update users/<user-id> -r hotel-realm -s requiredActions=[]
+```
+
+PowerShell (pour recuperer `<user-id>`) :
+
+```powershell
+$user = docker exec hotel-keycloak /opt/keycloak/bin/kcadm.sh get users -r hotel-realm -q username=<new-username>
+$userId = ($user | ConvertFrom-Json)[0].id
+docker exec hotel-keycloak /opt/keycloak/bin/kcadm.sh update users/$userId -r hotel-realm -s requiredActions=[]
+```
+
+Note navigateur :
+
+- Utiliser soit `http://localhost:4200`, soit `http://127.0.0.1:4200`.
+- Les deux origines sont autorisees dans la config Gateway/Keycloak.
+
+Commande token testee et fonctionnelle :
+
+```bash
+curl -X POST "http://localhost:8085/realms/hotel-realm/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=hotel-frontend" \
+  -d "grant_type=password" \
+  -d "username=demo" \
+  -d "password=demo123"
+```
+
 ### 2. Compiler le projet
 
 ```bash

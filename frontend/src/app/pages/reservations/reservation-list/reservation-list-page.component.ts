@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ErrorMessageService } from '../../../core/services/error-message.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Reservation } from '../../../models/reservation.model';
 import { ReservationApiService } from '../../../services/reservation-api.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -35,6 +36,7 @@ export class ReservationListPageComponent {
   private readonly errorMessageService = inject(ErrorMessageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly authService = inject(AuthService);
 
   readonly filterForm = this.fb.group({
     status: this.fb.control<ReservationStatusFilter>('all'),
@@ -45,14 +47,21 @@ export class ReservationListPageComponent {
   reservations: Reservation[] = [];
   errorMessage = '';
 
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
   ngOnInit(): void {
     this.loadReservations();
   }
 
   loadReservations(): void {
     this.errorMessage = '';
-    this.reservationApi
-      .getAllReservations()
+    const request$ = this.isAdmin
+      ? this.reservationApi.getAllReservations()
+      : this.reservationApi.getMyReservations();
+
+    request$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (reservations) => {
@@ -69,6 +78,11 @@ export class ReservationListPageComponent {
   }
 
   applyFilters(): void {
+    if (!this.isAdmin) {
+      this.loadReservations();
+      return;
+    }
+
     const status = this.filterForm.controls.status.value;
     const clientId = Number(this.filterForm.controls.clientId.value);
     const roomId = Number(this.filterForm.controls.roomId.value);
@@ -109,6 +123,10 @@ export class ReservationListPageComponent {
   }
 
   confirmReservation(reservation: Reservation): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
     if (!reservation.id) {
       return;
     }
@@ -131,6 +149,10 @@ export class ReservationListPageComponent {
   }
 
   cancelReservation(reservation: Reservation): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
     if (!reservation.id) {
       return;
     }
@@ -153,6 +175,10 @@ export class ReservationListPageComponent {
   }
 
   deleteReservation(reservation: Reservation): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
     if (!reservation.id) {
       return;
     }

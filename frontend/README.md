@@ -22,6 +22,26 @@ L interception automatique est definie dans :
 
 - [src/app/core/interceptors/api-prefix.interceptor.ts](</c:/Users/NOURANE/Downloads/projetMS/frontend/src/app/core/interceptors/api-prefix.interceptor.ts:1>)
 
+## Authentification Keycloak
+
+Le frontend est configure pour utiliser Keycloak avec le realm `hotel-realm`.
+
+Configuration actuelle :
+
+- URL Keycloak : `http://localhost:8085`
+- Realm : `hotel-realm`
+- Client : `hotel-frontend`
+
+Fichier de configuration :
+
+- `src/app/core/constants/auth.constants.ts`
+
+Comportement :
+
+- Les routes de l application sont protegees via un guard Angular.
+- Les appels API vers `http://localhost:8080` envoient automatiquement le bearer token.
+- Pour desactiver l auth cote frontend, passer `enabled` a `false` dans `auth.constants.ts`.
+
 ## Routes principales
 
 - `/dashboard`

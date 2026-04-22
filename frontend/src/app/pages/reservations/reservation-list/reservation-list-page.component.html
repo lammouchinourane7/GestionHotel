@@ -1,46 +1,50 @@
 <app-page-header
   eyebrow="Reservations"
-  title="Gestion des reservations"
-  subtitle="Surveillez le cycle de vie des reservations et declenchez les actions de confirmation ou d annulation."
+  [title]="isAdmin ? 'Gestion des reservations' : 'Mes reservations'"
+  [subtitle]="isAdmin
+    ? 'Surveillez le cycle de vie des reservations et declenchez les actions de confirmation ou d annulation.'
+    : 'Consultez vos reservations et leurs details.'"
   actionLabel="Creer une reservation"
   actionLink="/reservations/new"
 />
 
-<app-section-card
-  title="Filtres"
-  description="Filtre par statut, client ou chambre pour presenter facilement les parcours metier."
-  badge="Filter"
->
-  <form class="grid gap-4 md:grid-cols-[14rem_1fr_1fr_auto_auto]" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
-    <div>
-      <label class="app-label" for="reservation-status">Statut</label>
-      <select id="reservation-status" class="app-select" formControlName="status">
-        <option value="all">Tous les statuts</option>
-        <option value="CREATED">CREATED</option>
-        <option value="CONFIRMED">CONFIRMED</option>
-        <option value="CANCELLED">CANCELLED</option>
-      </select>
-    </div>
+@if (isAdmin) {
+  <app-section-card
+    title="Filtres"
+    description="Filtre par statut, client ou chambre pour presenter facilement les parcours metier."
+    badge="Filter"
+  >
+    <form class="grid gap-4 md:grid-cols-[14rem_1fr_1fr_auto_auto]" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+      <div>
+        <label class="app-label" for="reservation-status">Statut</label>
+        <select id="reservation-status" class="app-select" formControlName="status">
+          <option value="all">Tous les statuts</option>
+          <option value="CREATED">CREATED</option>
+          <option value="CONFIRMED">CONFIRMED</option>
+          <option value="CANCELLED">CANCELLED</option>
+        </select>
+      </div>
 
-    <div>
-      <label class="app-label" for="reservation-client-id">Client ID</label>
-      <input id="reservation-client-id" type="number" class="app-input" formControlName="clientId" placeholder="Ex. 1" />
-    </div>
+      <div>
+        <label class="app-label" for="reservation-client-id">Client ID</label>
+        <input id="reservation-client-id" type="number" class="app-input" formControlName="clientId" placeholder="Ex. 1" />
+      </div>
 
-    <div>
-      <label class="app-label" for="reservation-room-id">Room ID</label>
-      <input id="reservation-room-id" type="number" class="app-input" formControlName="roomId" placeholder="Ex. 2" />
-    </div>
+      <div>
+        <label class="app-label" for="reservation-room-id">Room ID</label>
+        <input id="reservation-room-id" type="number" class="app-input" formControlName="roomId" placeholder="Ex. 2" />
+      </div>
 
-    <div class="flex items-end">
-      <button type="submit" class="app-button-primary w-full">Filtrer</button>
-    </div>
+      <div class="flex items-end">
+        <button type="submit" class="app-button-primary w-full">Filtrer</button>
+      </div>
 
-    <div class="flex items-end">
-      <button type="button" class="app-button-secondary w-full" (click)="resetFilters()">Reset</button>
-    </div>
-  </form>
-</app-section-card>
+      <div class="flex items-end">
+        <button type="button" class="app-button-secondary w-full" (click)="resetFilters()">Reset</button>
+      </div>
+    </form>
+  </app-section-card>
+}
 
 <div class="mt-6">
   <app-section-card
@@ -81,25 +85,27 @@
                   <td>
                     <div class="flex flex-wrap justify-end gap-2">
                       <a class="app-button-secondary px-3 py-2" [routerLink]="['/reservations', reservation.id]">Details</a>
-                      <button
-                        type="button"
-                        class="app-button-secondary px-3 py-2"
-                        [disabled]="reservation.status !== 'CREATED'"
-                        (click)="confirmReservation(reservation)"
-                      >
-                        Confirmer
-                      </button>
-                      <button
-                        type="button"
-                        class="app-button-danger px-3 py-2"
-                        [disabled]="reservation.status === 'CANCELLED'"
-                        (click)="cancelReservation(reservation)"
-                      >
-                        Annuler
-                      </button>
-                      <button type="button" class="app-button-danger px-3 py-2" (click)="deleteReservation(reservation)">
-                        Supprimer
-                      </button>
+                      @if (isAdmin) {
+                        <button
+                          type="button"
+                          class="app-button-secondary px-3 py-2"
+                          [disabled]="reservation.status !== 'CREATED'"
+                          (click)="confirmReservation(reservation)"
+                        >
+                          Confirmer
+                        </button>
+                        <button
+                          type="button"
+                          class="app-button-danger px-3 py-2"
+                          [disabled]="reservation.status === 'CANCELLED'"
+                          (click)="cancelReservation(reservation)"
+                        >
+                          Annuler
+                        </button>
+                        <button type="button" class="app-button-danger px-3 py-2" (click)="deleteReservation(reservation)">
+                          Supprimer
+                        </button>
+                      }
                     </div>
                   </td>
                 </tr>

@@ -3,14 +3,12 @@ import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 
 import { ErrorMessageService } from '../../../core/services/error-message.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { Client } from '../../../models/client.model';
-import { Reservation } from '../../../models/reservation.model';
-import { Room } from '../../../models/room.model';
-import { ClientApiService } from '../../../services/client-api.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { Reservation, ReservationClientOption, ReservationRoomOption } from '../../../models/reservation.model';
 import { ReservationApiService } from '../../../services/reservation-api.service';
 import { RoomApiService } from '../../../services/room-api.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -37,13 +35,13 @@ import { dateRangeValidator } from '../../../shared/validators/date-range.valida
 })
 export class ReservationFormPageComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly clientApi = inject(ClientApiService);
   private readonly roomApi = inject(RoomApiService);
   private readonly reservationApi = inject(ReservationApiService);
   private readonly notificationService = inject(NotificationService);
   private readonly errorMessageService = inject(ErrorMessageService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   readonly form = this.fb.group(
     {
@@ -55,15 +53,24 @@ export class ReservationFormPageComponent {
     { validators: dateRangeValidator('startDate', 'endDate') }
   );
 
-  clients: Client[] = [];
-  rooms: Room[] = [];
+  clients: ReservationClientOption[] = [];
+  rooms: ReservationRoomOption[] = [];
   selectedRoomPrice: number | null = null;
   selectedRoomAvailable: boolean | null = null;
   submitError = '';
 
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
   ngOnInit(): void {
     this.loadOptions();
     this.watchRoomSelection();
+
+    if (!this.isAdmin) {
+      this.form.controls.clientId.setValue(1);
+      this.form.controls.clientId.disable();
+    }
   }
 
   get nightsCount(): number {
@@ -87,9 +94,13 @@ export class ReservationFormPageComponent {
   }
 
   loadOptions(): void {
+    const clientsRequest$ = this.isAdmin
+      ? this.reservationApi.getReservationClientOptions()
+      : of([] as ReservationClientOption[]);
+
     forkJoin({
-      clients: this.clientApi.getAllClients(),
-      rooms: this.roomApi.getAllRooms()
+      clients: clientsRequest$,
+      rooms: this.reservationApi.getReservationRoomOptions()
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
