@@ -1,0 +1,88 @@
+<app-page-header
+  eyebrow="Rooms"
+  [title]="isEditMode ? 'Modifier une chambre' : 'Ajouter une chambre'"
+/>
+
+<div class="grid gap-6">
+  <app-section-card
+    [title]="isEditMode ? 'Edition de la chambre' : 'Nouvelle chambre'"
+    description="Chaque champ est controle pour garantir la coherence du backend."
+    badge="Form"
+  >
+    <form class="grid gap-5 md:grid-cols-2" [formGroup]="form" (ngSubmit)="submit()">
+      <div>
+        <label class="app-label" for="number">Numero</label>
+        <input
+          id="number"
+          type="text"
+          class="app-input"
+          [class.app-input-error]="form.controls.number.invalid && form.controls.number.touched"
+          formControlName="number"
+          placeholder="101"
+        />
+        <app-form-field-error [control]="form.controls.number" label="Room number" />
+      </div>
+
+      <div>
+        <label class="app-label" for="type">Type</label>
+        <select
+          id="type"
+          class="app-select"
+          [class.app-input-error]="form.controls.type.invalid && form.controls.type.touched"
+          formControlName="type"
+        >
+          <option value="">Choisir un type</option>
+          @for (roomType of roomTypes; track roomType) {
+            <option [value]="roomType">{{ roomType }}</option>
+          }
+        </select>
+        <app-form-field-error [control]="form.controls.type" label="Room type" />
+      </div>
+
+      <div>
+        <label class="app-label" for="capacity">Capacite</label>
+        <input
+          id="capacity"
+          type="number"
+          class="app-input"
+          [class.app-input-error]="form.controls.capacity.invalid && form.controls.capacity.touched"
+          formControlName="capacity"
+        />
+        <app-form-field-error [control]="form.controls.capacity" label="Capacity" />
+      </div>
+
+      <div>
+        <label class="app-label" for="pricePerNight">Prix par nuit</label>
+        <input
+          id="pricePerNight"
+          type="number"
+          step="0.01"
+          class="app-input"
+          [class.app-input-error]="form.controls.pricePerNight.invalid && form.controls.pricePerNight.touched"
+          formControlName="pricePerNight"
+        />
+        <app-form-field-error [control]="form.controls.pricePerNight" label="Price per night" />
+      </div>
+
+      <div class="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <label class="flex items-center gap-3 text-sm font-semibold text-slate-700">
+          <input type="checkbox" class="h-5 w-5 rounded border-slate-300 text-teal-600" formControlName="available" />
+          Chambre disponible pour reservation
+        </label>
+      </div>
+
+      @if (submitError) {
+        <div class="md:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ submitError }}
+        </div>
+      }
+
+      <div class="md:col-span-2 flex flex-wrap gap-3 pt-2">
+        <button type="submit" class="app-button-primary" [disabled]="form.invalid">
+          {{ isEditMode ? 'Enregistrer les modifications' : 'Ajouter la chambre' }}
+        </button>
+        <a routerLink="/rooms" class="app-button-secondary">Annuler</a>
+      </div>
+    </form>
+  </app-section-card>
+</div>

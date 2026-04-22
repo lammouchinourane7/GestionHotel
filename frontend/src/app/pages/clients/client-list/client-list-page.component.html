@@ -1,0 +1,179 @@
+<app-page-header
+  eyebrow="Clients"
+  title="Gestion des clients"
+  subtitle="La liste client expose les statistiques, le tri, la pagination, l export CSV et l acces au profil enrichi."
+  actionLabel="Ajouter un client"
+  actionLink="/clients/new"
+/>
+
+@if (statistics; as stats) {
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <app-stat-card title="Clients" [value]="stats.totalClients" description="Base client totale." accent="teal" />
+    <app-stat-card title="Nouveaux 30j" [value]="stats.newClientsLast30Days" description="Clients recents." accent="amber" />
+    <app-stat-card title="Avec preferences" [value]="stats.clientsWithPreferences" description="Profils enrichis." accent="slate" />
+    <app-stat-card title="Revenu cumule" [value]="(stats.totalRevenue | currency: 'EUR') ?? 'EUR 0'" description="Depuis reservation-service." accent="rose" />
+  </div>
+}
+
+<div class="mt-6 grid gap-6">
+  <app-section-card
+    title="Recherche, tri et export"
+    description="Tout reste dans la partie client: filtrage, tri, pagination et export CSV."
+    badge="Client"
+  >
+    <form class="grid gap-4 lg:grid-cols-[10rem_1fr_10rem_10rem_8rem_auto_auto]" [formGroup]="searchForm" (ngSubmit)="searchClients()">
+      <div>
+        <label class="app-label" for="client-search-mode">Critere</label>
+        <select id="client-search-mode" class="app-select" formControlName="mode">
+          <option value="ALL">Tous</option>
+          <option value="FIRSTNAME">Prenom</option>
+          <option value="LASTNAME">Nom</option>
+          <option value="EMAIL">Email</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="app-label" for="client-search-query">Recherche</label>
+        <input
+          id="client-search-query"
+          type="text"
+          class="app-input"
+          placeholder="Ex. Nour, Haddad, client@example.com"
+          formControlName="query"
+        />
+      </div>
+
+      <div>
+        <label class="app-label" for="client-sort-by">Tri</label>
+        <select id="client-sort-by" class="app-select" formControlName="sortBy">
+          <option value="createdAt">Creation</option>
+          <option value="updatedAt">Mise a jour</option>
+          <option value="firstName">Prenom</option>
+          <option value="lastName">Nom</option>
+          <option value="email">Email</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="app-label" for="client-direction">Ordre</label>
+        <select id="client-direction" class="app-select" formControlName="direction">
+          <option value="desc">Desc</option>
+          <option value="asc">Asc</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="app-label" for="client-page-size">Par page</label>
+        <select id="client-page-size" class="app-select" formControlName="size">
+          <option [value]="6">6</option>
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <button type="submit" class="app-button-primary w-full">Appliquer</button>
+      </div>
+
+      <div class="flex items-end">
+        <button type="button" class="app-button-secondary w-full" (click)="resetSearch()">Reset</button>
+      </div>
+    </form>
+
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <p>
+        @if (clientsPage) {
+          {{ clientsPage.totalElements }} client(s) trouves, page {{ clientsPage.page + 1 }} / {{ clientsPage.totalPages || 1 }}.
+        } @else {
+          Chargement de la liste...
+        }
+      </p>
+      <button type="button" class="app-button-secondary" [disabled]="isExporting" (click)="exportCsv()">
+        {{ isExporting ? 'Export...' : 'Exporter CSV' }}
+      </button>
+    </div>
+  </app-section-card>
+
+  <app-section-card
+    title="Liste des clients"
+    [description]="clients.length + ' client(s) affiches dans la page courante.'"
+    badge="Directory"
+  >
+    @if (clients.length > 0) {
+      <div class="overflow-hidden rounded-3xl border border-slate-200">
+        <div class="overflow-x-auto">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Contact</th>
+                <th>Preferences</th>
+                <th>Mis a jour</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white/70">
+              @for (client of clients; track client.id) {
+                <tr class="transition hover:bg-slate-50/80">
+                  <td>
+                    <p class="font-semibold text-slate-900">{{ client.firstName }} {{ client.lastName }}</p>
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Client #{{ client.id }}</p>
+                  </td>
+                  <td>
+                    <p>{{ client.email }}</p>
+                    <p class="text-xs text-slate-500">{{ client.phone }}</p>
+                  </td>
+                  <td>
+                    <p class="text-sm text-slate-700">{{ client.stayPreferences?.preferredRoomType || 'Non defini' }}</p>
+                    <p class="text-xs text-slate-500">
+                      {{ client.stayPreferences?.quietRoom ? 'Calme' : 'Standard' }} •
+                      {{ client.stayPreferences?.nonSmoking ? 'Non fumeur' : 'Libre' }}
+                    </p>
+                  </td>
+                  <td>{{ client.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    <div class="flex justify-end gap-2">
+                      <a class="app-button-secondary px-3 py-2" [routerLink]="['/clients', client.id]">Profil</a>
+                      <a class="app-button-secondary px-3 py-2" [routerLink]="['/clients/edit', client.id]">Modifier</a>
+                      <button type="button" class="app-button-danger px-3 py-2" (click)="deleteClient(client)">
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" class="app-button-secondary" [disabled]="!clientsPage || clientsPage.page === 0" (click)="previousPage()">
+          Precedent
+        </button>
+        <p class="text-sm text-slate-500">
+          @if (clientsPage) {
+            Page {{ clientsPage.page + 1 }} sur {{ clientsPage.totalPages || 1 }}
+          }
+        </p>
+        <button
+          type="button"
+          class="app-button-secondary"
+          [disabled]="!clientsPage || clientsPage.page >= clientsPage.totalPages - 1"
+          (click)="nextPage()"
+        >
+          Suivant
+        </button>
+      </div>
+    } @else {
+      <app-empty-state
+        title="Aucun client a afficher"
+        [description]="
+          errorMessage || 'Commencez par creer un client ou ajustez le filtre pour afficher des resultats.'
+        "
+        actionLabel="Ajouter un client"
+        actionLink="/clients/new"
+      />
+    }
+  </app-section-card>
+</div>

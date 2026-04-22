@@ -1,0 +1,14 @@
+@if (loadingService.isLoading()) {
+  <div class="fixed inset-0 z-[90] grid place-items-center bg-slate-950/20 backdrop-blur-sm">
+    <div class="app-card flex items-center gap-4 px-6 py-5">
+      <div class="relative h-10 w-10">
+        <div class="absolute inset-0 rounded-full border-4 border-teal-100"></div>
+        <div class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-teal-600"></div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-slate-800">Chargement en cours</p>
+        <p class="text-sm text-slate-500">Synchronisation avec la plateforme.</p>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,115 @@
+<app-page-header
+  eyebrow="Reservations"
+  title="Details d une reservation"
+  subtitle="Vue enrichie par OpenFeign avec informations client et chambre."
+/>
+
+@if (reservation; as item) {
+  <div class="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
+    <div class="space-y-6">
+      <app-section-card
+        title="Synthese"
+        description="Informations principales de la reservation."
+        badge="OpenFeign"
+      >
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-3xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Reservation ID</p>
+            <p class="mt-2 font-display text-3xl font-semibold text-slate-950">#{{ item.id }}</p>
+          </div>
+          <div class="rounded-3xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Statut</p>
+            <div class="mt-3">
+              <app-status-badge [label]="item.status ?? 'UNKNOWN'" [variant]="statusVariant" />
+            </div>
+          </div>
+          <div class="rounded-3xl bg-teal-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Prix total</p>
+            <p class="mt-2 font-display text-3xl font-semibold text-slate-950">{{ item.totalPrice ?? 0 | currency: 'EUR' }}</p>
+          </div>
+          <div class="rounded-3xl bg-amber-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Sejour</p>
+            <p class="mt-2 text-sm font-semibold text-slate-900">{{ item.startDate | date: 'dd MMM yyyy' }}</p>
+            <p class="text-sm text-slate-600">{{ item.endDate | date: 'dd MMM yyyy' }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            class="app-button-primary"
+            [disabled]="item.status !== 'CREATED'"
+            (click)="confirmReservation()"
+          >
+            Confirmer
+          </button>
+          <button
+            type="button"
+            class="app-button-danger"
+            [disabled]="item.status === 'CANCELLED'"
+            (click)="cancelReservation()"
+          >
+            Annuler
+          </button>
+          <a routerLink="/reservations" class="app-button-secondary">Retour</a>
+        </div>
+      </app-section-card>
+
+      <app-section-card title="Client associe" description="Donnees recuperees depuis client-service." badge="Client">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Identite</p>
+            <p class="mt-2 text-lg font-semibold text-slate-950">{{ item.client?.firstName }} {{ item.client?.lastName }}</p>
+            <p class="mt-1 text-sm text-slate-500">Client ID {{ item.clientId }}</p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Contact</p>
+            <p class="mt-2 text-sm text-slate-700">{{ item.client?.email }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ item.client?.phone }}</p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4 md:col-span-2">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Adresse</p>
+            <p class="mt-2 text-sm text-slate-700">{{ item.client?.address || 'Non renseignee' }}</p>
+          </div>
+        </div>
+      </app-section-card>
+    </div>
+
+    <app-section-card title="Chambre associee" description="Details recuperes depuis room-service." badge="Room">
+      <div class="space-y-4">
+        <div class="rounded-3xl bg-slate-50 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Room ID</p>
+          <p class="mt-2 font-display text-3xl font-semibold text-slate-950">#{{ item.roomId }}</p>
+        </div>
+        <div class="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Chambre</p>
+              <p class="mt-2 text-lg font-semibold text-slate-950">
+                {{ item.room?.number }} • {{ item.room?.type }}
+              </p>
+            </div>
+            <app-status-badge
+              [label]="item.room?.available ? 'Available' : 'Unavailable'"
+              [variant]="item.room?.available ? 'success' : 'danger'"
+            />
+          </div>
+          <p class="mt-3 text-sm text-slate-500">Capacite {{ item.room?.capacity }} • {{ item.room?.pricePerNight ?? 0 | currency: 'EUR' }} / nuit</p>
+        </div>
+        <div class="rounded-3xl bg-amber-50 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Scenario demonstrable</p>
+          <p class="mt-2 text-sm text-slate-700">
+            Cette vue montre clairement l enrichissement des donnees reservation par appels synchrones inter-services.
+          </p>
+        </div>
+      </div>
+    </app-section-card>
+  </div>
+} @else {
+  <app-empty-state
+    title="Reservation introuvable"
+    [description]="errorMessage || 'Le detail de reservation n est pas disponible pour le moment.'"
+    actionLabel="Retour aux reservations"
+    actionLink="/reservations"
+  />
+}

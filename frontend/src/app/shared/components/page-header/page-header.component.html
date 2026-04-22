@@ -1,0 +1,28 @@
+<div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+  <div class="space-y-3">
+    @if (eyebrow) {
+      <span class="inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-teal-700">
+        {{ eyebrow }}
+      </span>
+    }
+    <div>
+      <h1 class="font-display text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl">
+        {{ title }}
+      </h1>
+      @if (subtitle) {
+        <p class="mt-2 max-w-3xl text-balance text-sm text-slate-500 md:text-base">
+          {{ subtitle }}
+        </p>
+      }
+    </div>
+  </div>
+
+  @if (actionLabel && actionLink) {
+    <a [routerLink]="actionLink" class="app-button-primary">
+      <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none">
+        <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      {{ actionLabel }}
+    </a>
+  }
+</div>

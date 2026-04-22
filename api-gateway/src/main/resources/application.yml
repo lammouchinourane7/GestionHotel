@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "${FRONTEND_ORIGIN:http://localhost:4200}"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+      routes:
+        - id: client-service-route
+          uri: lb://client-service
+          predicates:
+            - Path=/api/clients/**
+        - id: room-service-route
+          uri: lb://room-service
+          predicates:
+            - Path=/api/rooms/**
+        - id: reservation-service-route
+          uri: lb://reservation-service
+          predicates:
+            - Path=/api/reservations/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway,health,info

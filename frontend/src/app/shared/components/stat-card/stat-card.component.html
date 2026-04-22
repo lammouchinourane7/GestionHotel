@@ -1,0 +1,16 @@
+<article class="app-card overflow-hidden p-5">
+  <div class="rounded-2xl bg-gradient-to-br p-5" [class]="accentClasses">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] opacity-75">{{ title }}</p>
+        <p class="mt-4 font-display text-3xl font-semibold text-slate-950">{{ value }}</p>
+      </div>
+      <div class="animate-float rounded-2xl border border-white/80 bg-white/70 p-3 shadow-glass">
+        <div class="h-3 w-3 rounded-full bg-current"></div>
+      </div>
+    </div>
+    @if (description) {
+      <p class="mt-4 text-sm text-slate-500">{{ description }}</p>
+    }
+  </div>
+</article>

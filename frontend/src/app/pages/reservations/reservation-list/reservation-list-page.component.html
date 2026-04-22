@@ -1,0 +1,120 @@
+<app-page-header
+  eyebrow="Reservations"
+  title="Gestion des reservations"
+  subtitle="Surveillez le cycle de vie des reservations et declenchez les actions de confirmation ou d annulation."
+  actionLabel="Creer une reservation"
+  actionLink="/reservations/new"
+/>
+
+<app-section-card
+  title="Filtres"
+  description="Filtre par statut, client ou chambre pour presenter facilement les parcours metier."
+  badge="Filter"
+>
+  <form class="grid gap-4 md:grid-cols-[14rem_1fr_1fr_auto_auto]" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+    <div>
+      <label class="app-label" for="reservation-status">Statut</label>
+      <select id="reservation-status" class="app-select" formControlName="status">
+        <option value="all">Tous les statuts</option>
+        <option value="CREATED">CREATED</option>
+        <option value="CONFIRMED">CONFIRMED</option>
+        <option value="CANCELLED">CANCELLED</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="app-label" for="reservation-client-id">Client ID</label>
+      <input id="reservation-client-id" type="number" class="app-input" formControlName="clientId" placeholder="Ex. 1" />
+    </div>
+
+    <div>
+      <label class="app-label" for="reservation-room-id">Room ID</label>
+      <input id="reservation-room-id" type="number" class="app-input" formControlName="roomId" placeholder="Ex. 2" />
+    </div>
+
+    <div class="flex items-end">
+      <button type="submit" class="app-button-primary w-full">Filtrer</button>
+    </div>
+
+    <div class="flex items-end">
+      <button type="button" class="app-button-secondary w-full" (click)="resetFilters()">Reset</button>
+    </div>
+  </form>
+</app-section-card>
+
+<div class="mt-6">
+  <app-section-card
+    title="Liste des reservations"
+    [description]="reservations.length + ' reservation(s) dans la vue active.'"
+    badge="Workflow"
+  >
+    @if (reservations.length > 0) {
+      <div class="overflow-hidden rounded-3xl border border-slate-200">
+        <div class="overflow-x-auto">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Client / Room</th>
+                <th>Sejour</th>
+                <th>Prix total</th>
+                <th>Statut</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white/70">
+              @for (reservation of reservations; track reservation.id) {
+                <tr class="transition hover:bg-slate-50/80">
+                  <td class="font-semibold text-slate-900">#{{ reservation.id }}</td>
+                  <td>
+                    <p>Client {{ reservation.clientId }}</p>
+                    <p class="text-xs text-slate-500">Room {{ reservation.roomId }}</p>
+                  </td>
+                  <td>
+                    <p>{{ reservation.startDate | date: 'dd MMM yyyy' }}</p>
+                    <p class="text-xs text-slate-500">{{ reservation.endDate | date: 'dd MMM yyyy' }}</p>
+                  </td>
+                  <td class="font-semibold text-slate-900">{{ reservation.totalPrice ?? 0 | currency: 'EUR' }}</td>
+                  <td>
+                    <app-status-badge [label]="reservation.status ?? 'UNKNOWN'" [variant]="getStatusVariant(reservation.status)" />
+                  </td>
+                  <td>
+                    <div class="flex flex-wrap justify-end gap-2">
+                      <a class="app-button-secondary px-3 py-2" [routerLink]="['/reservations', reservation.id]">Details</a>
+                      <button
+                        type="button"
+                        class="app-button-secondary px-3 py-2"
+                        [disabled]="reservation.status !== 'CREATED'"
+                        (click)="confirmReservation(reservation)"
+                      >
+                        Confirmer
+                      </button>
+                      <button
+                        type="button"
+                        class="app-button-danger px-3 py-2"
+                        [disabled]="reservation.status === 'CANCELLED'"
+                        (click)="cancelReservation(reservation)"
+                      >
+                        Annuler
+                      </button>
+                      <button type="button" class="app-button-danger px-3 py-2" (click)="deleteReservation(reservation)">
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <app-empty-state
+        title="Aucune reservation disponible"
+        [description]="errorMessage || 'Creer une reservation ou ajuster les filtres pour afficher des donnees.'"
+        actionLabel="Nouvelle reservation"
+        actionLink="/reservations/new"
+      />
+    }
+  </app-section-card>
+</div>

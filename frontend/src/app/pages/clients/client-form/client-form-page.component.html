@@ -1,0 +1,172 @@
+<app-page-header
+  eyebrow="Clients"
+  [title]="isEditMode ? 'Modifier un client' : 'Ajouter un client'"
+/>
+
+<div class="grid gap-6">
+  <app-section-card
+    [title]="isEditMode ? 'Edition de la fiche client' : 'Nouvelle fiche client'"
+    description="Le profil client et ses preferences de sejour sont geres depuis le meme ecran."
+    badge="Client"
+  >
+    <form class="grid gap-6" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div>
+          <label class="app-label" for="firstName">Prenom</label>
+          <input
+            id="firstName"
+            type="text"
+            class="app-input"
+            [class.app-input-error]="form.controls.firstName.invalid && form.controls.firstName.touched"
+            formControlName="firstName"
+            placeholder="Prenom du client"
+          />
+          <app-form-field-error [control]="form.controls.firstName" label="First name" />
+        </div>
+
+        <div>
+          <label class="app-label" for="lastName">Nom</label>
+          <input
+            id="lastName"
+            type="text"
+            class="app-input"
+            [class.app-input-error]="form.controls.lastName.invalid && form.controls.lastName.touched"
+            formControlName="lastName"
+            placeholder="Nom du client"
+          />
+          <app-form-field-error [control]="form.controls.lastName" label="Last name" />
+        </div>
+
+        <div>
+          <label class="app-label" for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            class="app-input"
+            [class.app-input-error]="form.controls.email.invalid && form.controls.email.touched"
+            formControlName="email"
+            placeholder="client@example.com"
+          />
+          <app-form-field-error [control]="form.controls.email" label="Email" />
+        </div>
+
+        <div>
+          <label class="app-label" for="phone">Telephone</label>
+          <input
+            id="phone"
+            type="text"
+            class="app-input"
+            [class.app-input-error]="form.controls.phone.invalid && form.controls.phone.touched"
+            formControlName="phone"
+            placeholder="+216..."
+          />
+          <app-form-field-error [control]="form.controls.phone" label="Phone" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="app-label" for="address">Adresse</label>
+          <input id="address" type="text" class="app-input" formControlName="address" placeholder="Adresse complete" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="app-label" for="nationalId">National ID</label>
+          <input
+            id="nationalId"
+            type="text"
+            class="app-input"
+            formControlName="nationalId"
+            placeholder="Numero CIN / piece d identite"
+          />
+        </div>
+      </div>
+
+      <div formGroupName="stayPreferences" class="rounded-3xl border border-slate-200 bg-slate-50/70 p-5">
+        <div class="mb-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Preferences de sejour</p>
+          <p class="mt-2 text-sm text-slate-500">Ces champs alimentent le profil client enrichi cote ms-client.</p>
+        </div>
+
+        <div class="grid gap-5 md:grid-cols-2">
+          <div>
+            <label class="app-label" for="preferredRoomType">Type de chambre prefere</label>
+            <input
+              id="preferredRoomType"
+              type="text"
+              class="app-input"
+              formControlName="preferredRoomType"
+              placeholder="STANDARD, DELUXE, SUITE..."
+            />
+          </div>
+
+          <div>
+            <label class="app-label" for="preferredBedType">Type de lit prefere</label>
+            <input
+              id="preferredBedType"
+              type="text"
+              class="app-input"
+              formControlName="preferredBedType"
+              placeholder="KING, QUEEN, TWIN..."
+            />
+          </div>
+
+          <div>
+            <label class="app-label" for="preferredFloor">Etage prefere</label>
+            <input
+              id="preferredFloor"
+              type="number"
+              class="app-input"
+              formControlName="preferredFloor"
+              placeholder="Ex. 4"
+            />
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 md:col-span-1">
+            <p class="text-sm font-semibold text-slate-800">Options de sejour</p>
+            <div class="mt-3 grid gap-3">
+              <label class="flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" formControlName="quietRoom" />
+                Chambre calme
+              </label>
+              <label class="flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" formControlName="nonSmoking" />
+                Non fumeur
+              </label>
+              <label class="flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" formControlName="highFloor" />
+                Etage eleve
+              </label>
+              <label class="flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" formControlName="needsBabyBed" />
+                Lit bebe
+              </label>
+            </div>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="app-label" for="specialRequests">Demandes speciales</label>
+            <textarea
+              id="specialRequests"
+              rows="3"
+              class="app-input min-h-28"
+              formControlName="specialRequests"
+              placeholder="Ex. vue mer, proche ascenseur, allergies..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      @if (submitError) {
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ submitError }}
+        </div>
+      }
+
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button type="submit" class="app-button-primary" [disabled]="form.invalid">
+          {{ isEditMode ? 'Enregistrer les modifications' : 'Creer le client' }}
+        </button>
+        <a routerLink="/clients" class="app-button-secondary">Annuler</a>
+      </div>
+    </form>
+  </app-section-card>
+</div>

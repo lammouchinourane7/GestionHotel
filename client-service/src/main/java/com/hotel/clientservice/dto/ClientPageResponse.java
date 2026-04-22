@@ -1,0 +1,25 @@
+package com.hotel.clientservice.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ClientPageResponse {
+
+    private List<ClientResponse> content;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
+    private String sortBy;
+    private String direction;
+    private ClientPageSearchMode mode;
+    private String query;
+}

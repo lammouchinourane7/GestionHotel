@@ -1,0 +1,142 @@
+<app-page-header
+  eyebrow="Reservations"
+  title="Creer une reservation"
+  subtitle="Le formulaire s appuie sur les donnees des clients et des chambres puis laisse le backend calculer le prix total."
+/>
+
+@if (clients.length === 0 || rooms.length === 0) {
+  <app-empty-state
+    title="Donnees insuffisantes pour reserver"
+    description="Ajoutez au moins un client et une chambre avant de creer une reservation."
+    actionLabel="Voir les clients"
+    actionLink="/clients"
+  />
+} @else {
+  <div class="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
+    <app-section-card
+      title="Nouvelle reservation"
+      description="Selectionnez un client, une chambre et une periode de sejour."
+      badge="Form"
+    >
+      <form class="grid gap-5 md:grid-cols-2" [formGroup]="form" (ngSubmit)="submit()">
+        <div>
+          <label class="app-label" for="clientId">Client</label>
+          <select
+            id="clientId"
+            class="app-select"
+            [class.app-input-error]="form.controls.clientId.invalid && form.controls.clientId.touched"
+            formControlName="clientId"
+          >
+            <option [value]="0">Choisir un client</option>
+            @for (client of clients; track client.id) {
+              <option [value]="client.id">{{ client.id }} - {{ client.firstName }} {{ client.lastName }}</option>
+            }
+          </select>
+          <app-form-field-error [control]="form.controls.clientId" label="Client selection" />
+        </div>
+
+        <div>
+          <label class="app-label" for="roomId">Chambre</label>
+          <select
+            id="roomId"
+            class="app-select"
+            [class.app-input-error]="form.controls.roomId.invalid && form.controls.roomId.touched"
+            formControlName="roomId"
+          >
+            <option [value]="0">Choisir une chambre</option>
+            @for (room of rooms; track room.id) {
+              <option [value]="room.id">{{ room.id }} - {{ room.number }} / {{ room.type }}</option>
+            }
+          </select>
+          <app-form-field-error [control]="form.controls.roomId" label="Room selection" />
+        </div>
+
+        <div>
+          <label class="app-label" for="startDate">Date de debut</label>
+          <input
+            id="startDate"
+            type="date"
+            class="app-input"
+            [class.app-input-error]="form.controls.startDate.invalid && form.controls.startDate.touched"
+            formControlName="startDate"
+          />
+          <app-form-field-error [control]="form.controls.startDate" label="Start date" />
+        </div>
+
+        <div>
+          <label class="app-label" for="endDate">Date de fin</label>
+          <input
+            id="endDate"
+            type="date"
+            class="app-input"
+            [class.app-input-error]="form.controls.endDate.invalid && form.controls.endDate.touched"
+            formControlName="endDate"
+          />
+          <app-form-field-error [control]="form.controls.endDate" label="End date" />
+        </div>
+
+        @if (form.errors?.['dateRange']) {
+          <div class="md:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            La date de debut doit etre strictement avant la date de fin.
+          </div>
+        }
+
+        @if (submitError) {
+          <div class="md:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ submitError }}
+          </div>
+        }
+
+        <div class="md:col-span-2 flex flex-wrap gap-3 pt-2">
+          <button type="submit" class="app-button-primary" [disabled]="form.invalid">Creer la reservation</button>
+          <a routerLink="/reservations" class="app-button-secondary">Annuler</a>
+        </div>
+      </form>
+    </app-section-card>
+
+    <app-section-card
+      title="Apercu intelligent"
+      description="Quelques informations utiles avant la soumission."
+      badge="Preview"
+    >
+      <div class="space-y-4">
+        <div class="rounded-2xl bg-slate-50 p-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nuits</p>
+          <p class="mt-2 font-display text-3xl font-semibold text-slate-950">{{ nightsCount }}</p>
+        </div>
+
+        <div class="rounded-2xl bg-teal-50 p-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Prix chambre</p>
+          <p class="mt-2 font-display text-3xl font-semibold text-slate-950">
+            {{ selectedRoomPrice ?? 0 | currency: 'EUR' }}
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Disponibilite</p>
+              <p class="mt-2 text-sm text-slate-600">Verification directe du room-service.</p>
+            </div>
+            @if (selectedRoomAvailable !== null) {
+              <app-status-badge
+                [label]="selectedRoomAvailable ? 'Available' : 'Unavailable'"
+                [variant]="selectedRoomAvailable ? 'success' : 'danger'"
+              />
+            } @else {
+              <app-status-badge label="Waiting" variant="neutral" />
+            }
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-amber-50 p-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Estimation</p>
+          <p class="mt-2 font-display text-3xl font-semibold text-slate-950">
+            {{ estimatedTotal ?? 0 | currency: 'EUR' }}
+          </p>
+          <p class="mt-2 text-sm text-slate-600">Le calcul officiel est realise par le backend via OpenFeign.</p>
+        </div>
+      </div>
+    </app-section-card>
+  </div>
+}
